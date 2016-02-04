@@ -24,6 +24,10 @@ func NewServiceRunnerBuilder(serviceName string, runHandler RunHandler) ServiceR
 type ServiceRunnerBuilder interface {
 	WithServiceDisplayName(serviceDisplayName string) ServiceRunnerBuilder
 	WithServiceDescription(serviceDescription string) ServiceRunnerBuilder
+
+	WithWorkingDirectory(dir string) ServiceRunnerBuilder
+	WithAdditionalArguments(args ...string) ServiceRunnerBuilder
+
 	WithServiceUserName(serviceUserName string) ServiceRunnerBuilder
 	WithServiceUserName_AsCurrentUser() ServiceRunnerBuilder
 
@@ -36,7 +40,11 @@ type builder struct {
 	ServiceName        string
 	ServiceDisplayName string
 	ServiceDescription string
-	ServiceUserName    string
+
+	WorkingDirectory    string
+	AdditionalArguments []string
+
+	ServiceUserName string
 
 	RunHandler    RunHandler
 	OnStopHandler OnStopHandler
@@ -49,6 +57,16 @@ func (b *builder) WithServiceDisplayName(serviceDisplayName string) ServiceRunne
 
 func (b *builder) WithServiceDescription(serviceDescription string) ServiceRunnerBuilder {
 	b.ServiceDescription = serviceDescription
+	return b
+}
+
+func (b *builder) WithWorkingDirectory(dir string) ServiceRunnerBuilder {
+	b.WorkingDirectory = dir
+	return b
+}
+
+func (b *builder) WithAdditionalArguments(args ...string) ServiceRunnerBuilder {
+	b.AdditionalArguments = args
 	return b
 }
 
@@ -71,10 +89,12 @@ func (b *builder) Run() {
 	flag.Parse()
 
 	svcConfig := &service.Config{
-		Name:        b.ServiceName,
-		DisplayName: b.ServiceDisplayName,
-		Description: b.ServiceDescription,
-		UserName:    b.ServiceUserName,
+		Name:             b.ServiceName,
+		DisplayName:      b.ServiceDisplayName,
+		Description:      b.ServiceDescription,
+		WorkingDirectory: b.WorkingDirectory,
+		Arguments:        b.AdditionalArguments,
+		UserName:         b.ServiceUserName,
 	}
 
 	prg := &program{}
