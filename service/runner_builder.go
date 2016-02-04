@@ -7,6 +7,8 @@ import (
 	"strings"
 )
 
+var ServiceFlag = flag.String("service", "", "Control the system service.")
+
 func NewServiceRunnerBuilder(serviceName string, runHandler RunHandler) ServiceRunnerBuilder {
 	if strings.TrimSpace(serviceName) == "" {
 		panic("The service name cannot be blank in NewServiceRunnerBuilder")
@@ -78,8 +80,9 @@ func (b *builder) WithOnStopHandler(h OnStopHandler) ServiceRunnerBuilder {
 }
 
 func (b *builder) Run() {
-	svcFlag := flag.String("service", "", "Control the system service.")
-	flag.Parse()
+	if !flag.Parsed() {
+		flag.Parse()
+	}
 
 	svcConfig := &service.Config{
 		Name:        b.ServiceName,
@@ -113,8 +116,8 @@ func (b *builder) Run() {
 		}
 	}()
 
-	if len(*svcFlag) != 0 {
-		err := service.Control(s, *svcFlag)
+	if len(*ServiceFlag) != 0 {
+		err := service.Control(s, *ServiceFlag)
 		if err != nil {
 			log.Printf("Valid actions: %q\n", service.ControlAction)
 			log.Fatal(err)
