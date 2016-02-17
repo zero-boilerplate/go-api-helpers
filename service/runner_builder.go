@@ -19,6 +19,7 @@ func NewServiceRunnerBuilder(serviceName string, runHandler RunHandler) ServiceR
 		ServiceDisplayName: serviceName, //default to name
 		ServiceDescription: serviceName, //default to name
 		ServiceUserName:    "",
+		ServicePassword:    "",
 		RunHandler:         runHandler,
 	}
 }
@@ -31,6 +32,8 @@ type ServiceRunnerBuilder interface {
 
 	WithServiceUserName(serviceUserName string) ServiceRunnerBuilder
 	WithServiceUserName_AsCurrentUser() ServiceRunnerBuilder
+
+	WithServicePassword(servicePassword string) ServiceRunnerBuilder
 
 	WithOnStopHandler(h OnStopHandler) ServiceRunnerBuilder
 
@@ -45,6 +48,7 @@ type builder struct {
 	AdditionalArguments []string
 
 	ServiceUserName string
+	ServicePassword string
 
 	RunHandler    RunHandler
 	OnStopHandler OnStopHandler
@@ -74,6 +78,11 @@ func (b *builder) WithServiceUserName_AsCurrentUser() ServiceRunnerBuilder {
 	return b.WithServiceUserName(getCurrentUserName())
 }
 
+func (b *builder) WithServicePassword(servicePassword string) ServiceRunnerBuilder {
+	b.ServicePassword = servicePassword
+	return b
+}
+
 func (b *builder) WithOnStopHandler(h OnStopHandler) ServiceRunnerBuilder {
 	b.OnStopHandler = h
 	return b
@@ -84,12 +93,18 @@ func (b *builder) Run() {
 		flag.Parse()
 	}
 
+	options := make(map[string]interface{})
+	if strings.TrimSpace(b.ServicePassword) != "" {
+		options["Password"] = b.ServicePassword
+	}
+
 	svcConfig := &service.Config{
 		Name:        b.ServiceName,
 		DisplayName: b.ServiceDisplayName,
 		Description: b.ServiceDescription,
 		Arguments:   b.AdditionalArguments,
 		UserName:    b.ServiceUserName,
+		Option:      options,
 	}
 
 	prg := &program{}
